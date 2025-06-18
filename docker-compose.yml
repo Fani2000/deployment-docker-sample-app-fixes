@@ -3,23 +3,46 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.reactUI
+      args:
+        - REACT_APP_API_URL=${REACT_APP_API_URL:-http://nodebackend:9000}
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://nodebackend:9000}
     ports:
-      - "3000:3000"    
+      - "3000:3000"
     depends_on:
-      - db
-  nodebackend: 
+      - nodebackend
+    networks:
+      - slack_network
+
+  nodebackend:
     build:
       context: ./server
       dockerfile: Dockerfile.node
-    ports: 
-      - "9000:9000"    #external:internal 
+    environment:
+      - DB_NAME=${DB_NAME:-slackchannels}
+      - DB_HOSTNAME=db
+      - PORT=${PORT:-9000}
+    ports:
+      - "9000:9000"
     depends_on:
       - db
+    networks:
+      - slack_network
+
   db:
     volumes:
       - slack_db:/data/db
     image: mongo:latest
+    environment:
+      - MONGO_INITDB_DATABASE=${DB_NAME:-slackchannels}
     ports:
-      - "27017:27017"  
+      - "27017:27017"
+    networks:
+      - slack_network
+
+networks:
+  slack_network:
+    driver: bridge
+
 volumes:
-   slack_db:
+  slack_db:
