@@ -1,10 +1,11 @@
 services:
   slackfrontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.reactUI
-      args:
-        - REACT_APP_API_URL=${REACT_APP_API_URL:-http://nodebackend:9000}
+    image: keorapetse159/slack-clone-frontend:latest
+    # build:
+      # context: .
+      # dockerfile: Dockerfile.reactUI
+      # args:
+      #   - REACT_APP_API_URL=${REACT_APP_API_URL:-http://nodebackend:9000}
     environment:
       - REACT_APP_API_URL=${REACT_APP_API_URL:-http://nodebackend:9000}
     ports:
@@ -15,9 +16,10 @@ services:
       - slack_network
 
   nodebackend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile.node
+    image: keorapetse159/slack-backend-clone:latest
+    # build:
+      # context: ./server
+      # dockerfile: Dockerfile.node
     environment:
       - DB_NAME=${DB_NAME:-slackchannels}
       - DB_HOSTNAME=db

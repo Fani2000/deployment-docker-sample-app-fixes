@@ -1,13 +1,33 @@
-FROM node:18
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
 WORKDIR /app
-COPY ./package.json ./package.json
-COPY ./server.js ./server.js
-COPY ./messageModel.js ./messageModel.js 
-COPY ./roomModel.js ./roomModel.js
-COPY ./userModel.js ./userModel.js
-RUN yarn install 
+COPY package.json ./
+RUN yarn install --frozen-lockfile
+
+# Stage 2: Builder
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Stage 3: Runner
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Copy only necessary files from builder
+COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/messageModel.js ./messageModel.js
+COPY --from=builder /app/roomModel.js ./roomModel.js
+COPY --from=builder /app/userModel.js ./userModel.js
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+
+# Create a non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodeuser -u 1001
+USER nodeuser
+
 LABEL developer=si3mshady
 EXPOSE 9000
 CMD ["node", "server.js"]
-
-# docker build . -f Dockerfile.node  -t si3mshady/slackclone-be:1
